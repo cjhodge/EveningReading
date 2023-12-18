@@ -86,6 +86,7 @@ struct LinkViewerSheet : View {
                                   .imageScale(.large)
                                   .aspectRatio(contentMode: .fit)
                             }
+                            .foregroundColor(Color.blue)
                             //.disabled(self.linkViewerStore.webView.isLoading)
                         })
                     }
