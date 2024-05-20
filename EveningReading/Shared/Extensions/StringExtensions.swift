@@ -405,7 +405,7 @@ extension String {
     func getTimeRemaining() -> Double {
         let ti: TimeInterval = self.fromString().timeIntervalSinceNow
         let minutes: Int = Int((ti / 60)) * -1;
-        var size = Double(minutes)/1080.0;
+        var size = Double(minutes)/1440.0;
         size = size * 100;
         if size > 100 { size = 100; }
         if size < 1 { size = 1 }

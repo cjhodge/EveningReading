@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 
+
+
 extension Date {
 
     func timeRemaining() -> String {
@@ -15,7 +17,7 @@ extension Date {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.hour, .minute, .month, .year, .day], from: date as Date)
         let currentDate = calendar.date(from: components)
-        let expiringTime = self.addingTimeInterval(64800)
+        let expiringTime = self.addingTimeInterval(86400)
         let CompetitionDayDifference = calendar.dateComponents([.day, .hour, .minute], from: currentDate!, to: expiringTime)
         let hoursLeft = CompetitionDayDifference.hour
         let minutesLeft = CompetitionDayDifference.minute
@@ -32,9 +34,9 @@ extension Date {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.hour, .minute, .month, .year, .day], from: date as Date)
         let currentDate = calendar.date(from: components)
-        let expiringTime = self.addingTimeInterval(64800)
+        let expiringTime = self.addingTimeInterval(86400)
         let elapsed = expiringTime.timeIntervalSince(currentDate!)
-        let percent = ((elapsed / 64800) * 10).rounded(.towardZero) / 10
+        let percent = ((elapsed / 86400) * 10).rounded(.towardZero) / 10
         let percentWidth = (235.0 * percent).rounded(.towardZero)
         return 235.0 - CGFloat(percentWidth)
     }
