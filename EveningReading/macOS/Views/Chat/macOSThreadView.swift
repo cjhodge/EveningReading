@@ -121,6 +121,29 @@ struct macOSThreadView: View {
         }
     }
     
+    private func updateThread() {
+        self.hideThread = false
+        getThreadData()
+        postList = [ChatPosts]()
+        postStrength = [Int: Double]()
+        replyLines = [Int: String]()
+        getPostList(parentId: self.threadId)
+        selectedPost = 0
+        chatService.scrollTargetChat = 0
+    }
+    
+    private func finishedRefreshing(_ value: Bool) {
+        if value {
+            getThreadData()
+            postList = [ChatPosts]()
+            postStrength = [Int: Double]()
+            replyLines = [Int: String]()
+            getPostList(parentId: self.threadId)
+            chatService.showingRefreshThreadSpinner = false
+            chatService.scrollTargetChat = 0
+        }
+    }
+    
     var body: some View {
         VStack (alignment: .leading) {
             
@@ -332,26 +355,15 @@ struct macOSThreadView: View {
                 .padding(.bottom, 10)
             }
         }
-        .onReceive(chatService.$activeThreadId) { value in
-            self.hideThread = false
-            getThreadData()
-            postList = [ChatPosts]()
-            postStrength = [Int: Double]()
-            replyLines = [Int: String]()
-            getPostList(parentId: self.threadId)
-            selectedPost = 0
-            chatService.scrollTargetChat = 0
+        
+        // Update view contents on when thread selected
+        .onReceive(chatService.$activeThreadId) { _ in
+            updateThread()
         }
+        
+        // When done refreshing (after posting or pull to refresh)
         .onReceive(chatService.$didGetThreadFinish) { value in
-            if value {
-                getThreadData()
-                postList = [ChatPosts]()
-                postStrength = [Int: Double]()
-                replyLines = [Int: String]()
-                getPostList(parentId: self.threadId)
-                chatService.showingRefreshThreadSpinner = false
-                chatService.scrollTargetChat = 0
-            }
+            finishedRefreshing(value)
         }
     }
 }
