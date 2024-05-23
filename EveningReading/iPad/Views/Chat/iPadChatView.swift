@@ -35,6 +35,7 @@ struct iPadChatView: View {
                                 .environmentObject(appService)
                                 .environmentObject(chatService)
                                 .onTapGesture(count: 1) {
+                                    chatService.postsToHighlight.removeAll()
                                     selectThreadById(threadId: thread.threadId)
                                 }
                                 .padding(.bottom, -20)
