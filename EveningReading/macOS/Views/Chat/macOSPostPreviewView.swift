@@ -17,14 +17,31 @@ struct macOSPostPreviewView: View {
     @Binding var postCategory: String
     @Binding var postStrength: Double?
     @Binding var op: String
-
+    @Binding var selectedPostDepth: Int
+    @Binding var postsToHighlight: [Int]
+    
     var body: some View {
-        // Reply lines
-        Text(self.replyLines == nil ? String(repeating: " ", count: 5) : self.replyLines!)
-            .lineLimit(1)
-            .fixedSize()
-            .font(.custom("replylines", size: 25, relativeTo: .callout))
-            .foregroundColor(Color("replyLines"))
+        // Reply lines for eaiser reading
+        if self.replyLines != nil {
+            HStack(spacing: 0) {
+                ForEach(Array(self.replyLines!.enumerated()), id: \.offset) { index, character in
+                    Text(String(character))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .font(.custom("replylines", size: 25, relativeTo: .callout))
+                        .foregroundColor(Color("replyLines"))
+                        .overlay(
+                            Text(
+                                self.postsToHighlight.contains(postId) && selectedPostDepth - 1 == index && index > 0 ? String(character) : ""
+                            )
+                            .lineLimit(1)
+                            .fixedSize()
+                            .font(.custom("replylines", size: 25, relativeTo: .callout))
+                            .foregroundColor(Color.red)
+                        )
+                }
+            }
+        }
         
         // Category (rarely)
         if self.postCategory == "nws" {

@@ -32,6 +32,9 @@ struct macOSThreadView: View {
     @State private var showingHideAlert = false
     @State private var hideThread = false
     
+    @State private var selectedPostDepth = 0
+    @State private var postsToHighlight = [Int]()
+    
     private func getThreadData() {
         let threads = chatService.threads.filter({ return appService.threadFilters.contains($0.posts.filter({ return $0.parentId == 0 })[0].category) && !appService.collapsedThreads.contains($0.posts.filter({ return $0.parentId == 0 })[0].threadId)})
         
@@ -70,6 +73,14 @@ struct macOSThreadView: View {
         chatService.activeParentId = postList[postIndex].id
         selectedPost = postList[postIndex].id
         chatService.scrollTargetChat = postList[postIndex].id
+    }
+    
+    private func getChildren(parentId: Int) {
+        let children = self.postList.filter({ $0.parentId == parentId })
+        for child in children {
+            self.postsToHighlight.append(child.id)
+            getChildren(parentId: child.id)
+        }
     }
     
     private func showNextReply() {
@@ -280,8 +291,7 @@ struct macOSThreadView: View {
                                 // Reply expaned row
                                 if chatService.activeParentId == post.id {
                                     VStack {
-                                        macOSPostExpandedView(postId: .constant(post.id), postAuthor: .constant(post.author), replyLines: self.$replyLines[post.id], lols: .constant(post.lols), postText: self.$selectedPostRichText, postDateTime: .constant(post.date),
-                                            op: .constant(self.rootPostAuthor))
+                                        macOSPostExpandedView(postId: .constant(post.id), postAuthor: .constant(post.author), replyLines: self.$replyLines[post.id], lols: .constant(post.lols), postText: self.$selectedPostRichText, postDateTime: .constant(post.date), op: .constant(self.rootPostAuthor))
                                     }
                                     .onAppear() {
                                         // Load Rich Text
@@ -293,13 +303,22 @@ struct macOSThreadView: View {
                                 if chatService.activeParentId != post.id {
                                     HStack {
                                         macOSPostPreviewView(postId: .constant(post.id), postAuthor: .constant(post.author), replyLines: self.$replyLines[post.id], lols: .constant(post.lols), postText: .constant(post.body), postCategory: .constant(post.category), postStrength: .constant(postStrength[post.id]),
-                                            op: .constant(self.rootPostAuthor)
+                                            op: .constant(self.rootPostAuthor), selectedPostDepth: $selectedPostDepth, postsToHighlight: $postsToHighlight
                                         )}
                                     .contentShape(Rectangle())
                                     .onTapGesture(count: 1) {
                                         //withAnimation {
+                                            chatService.activePostId = post.id
                                             chatService.activeParentId = post.id
                                             selectedPost = post.id
+                                        
+                                            selectedPostDepth = replyLines[post.id]?.count ?? 999
+                                            postsToHighlight.removeAll()
+                                            
+                                            for siblingPost in postList.filter({ $0.parentId == post.parentId }) {
+                                                postsToHighlight.append(siblingPost.id)
+                                                getChildren(parentId: siblingPost.id)
+                                            }
                                         //}
                                     }
                                 }

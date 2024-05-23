@@ -21,11 +21,26 @@ struct macOSPostExpandedView: View {
     var body: some View {
         HStack {
             // Reply lines
-            Text(self.replyLines == nil ? String(repeating: " ", count: 5) : self.replyLines!)
-                .lineLimit(1)
-                .fixedSize()
-                .font(.custom("replylines", size: 25, relativeTo: .callout))
-                .foregroundColor(Color("replyLines"))
+            if self.replyLines != nil {
+                HStack(spacing: 0) {
+                    ForEach(Array(self.replyLines!.enumerated()), id: \.offset) { index, character in
+                        Text(String(character))
+                            .lineLimit(1)
+                            .fixedSize()
+                            .font(.custom("replylines", size: 25, relativeTo: .callout))
+                            .foregroundColor(Color("replyLines"))
+                            .overlay(
+                                Text(
+                                    self.postId == chatService.activePostId && self.replyLines!.count - 1 == index && index > 0 ? String(character) : ""
+                                )
+                                .lineLimit(1)
+                                .fixedSize()
+                                .font(.custom("replylines", size: 25, relativeTo: .callout))
+                                .foregroundColor(Color.red)
+                            )
+                    }
+                }
+            }
             
             // Author
             AuthorNameView(name: self.postAuthor, postId: self.postId, op: self.op)
