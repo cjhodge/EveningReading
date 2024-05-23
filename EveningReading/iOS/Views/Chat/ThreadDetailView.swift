@@ -13,14 +13,14 @@ struct ThreadDetailView: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var appService: AppService
     @EnvironmentObject var chatService: ChatService
-        
+    
     @Binding var threadId: Int
     var postId: Int = 0
     var replyCount: Int = 0
     var isSearchResult: Bool = false
     
     @State private var loadingLimit = 100
-
+    
     @State private var rootPostCategory: String = "ontopic"
     @State private var rootPostAuthor: String = ""
     @State private var rootPostBody: String = ""
@@ -56,7 +56,7 @@ struct ThreadDetailView: View {
     @State private var canRefresh = true
     
     @State private var threadNavigationLocation: CGPoint = CGPoint(x: UIScreen.main.bounds.width - 50, y: UIScreen.main.bounds.height - 120)
-
+    
     // For highlighting
     private func getUserData() {
         let user: String? = KeychainWrapper.standard.string(forKey: "Username")
@@ -142,15 +142,15 @@ struct ThreadDetailView: View {
     // Drag the thread navigation buttons
     private var threadNavigationDrag: some Gesture {
         DragGesture()
-        .onChanged { value in
-            self.threadNavigationLocation = value.location
-        }
-        .onEnded { value in
-            appService.threadNavigationLocationX = self.threadNavigationLocation.x
-            appService.threadNavigationLocationY = self.threadNavigationLocation.y
-        }
+            .onChanged { value in
+                self.threadNavigationLocation = value.location
+            }
+            .onEnded { value in
+                appService.threadNavigationLocationX = self.threadNavigationLocation.x
+                appService.threadNavigationLocationY = self.threadNavigationLocation.y
+            }
     }
-
+    
     // Page down through replies in thread
     private func showNextReply() {
         if postList.count > 0 {
@@ -195,6 +195,7 @@ struct ThreadDetailView: View {
         }
     }
     
+    // Set selected post and highlight the relevant reply lines
     private func setSelectedPost(_ postIndex: Int) {
         self.selectedPostRichText = RichTextBuilder.getRichText(postBody: postList[postIndex].body)
         self.selectedPost = postList[postIndex].id
@@ -216,6 +217,7 @@ struct ThreadDetailView: View {
         }
     }
     
+    // Get the children of a post
     private func getChildren(parentId: Int) {
         let children = self.postList.filter({ $0.parentId == parentId })
         for child in children {
@@ -224,6 +226,76 @@ struct ThreadDetailView: View {
         }
     }
     
+    // Stop posting, refreshing or tagging
+    private func stopAllActions() {
+        self.postList = [ChatPosts]()
+        self.postStrength = [Int: Double]()
+        chatService.didSubmitPost = false
+        chatService.didGetThreadStart = false
+        chatService.didGetThreadFinish = false
+        self.isGettingThread = false
+        chatService.showingTagNotice = false
+    }
+    
+    // Update view contents on iPad when thread selected
+    private func updateThread() {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            chatService.scrollTargetThreadTop = ScrollToTopId
+            self.selectedPost = 0
+            getThreadData()
+            self.postList = [ChatPosts]()
+            self.postStrength = [Int: Double]()
+            getPostList(parentId: self.threadId)
+        }
+    }
+    
+    // Fetch data and settings on load
+    private func fetchDataAndSettings() {
+        func getData() -> Void {
+            getUserData()
+            getThreadData()
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                getPostList(parentId: self.threadId)
+            }
+            self.threadNavigationLocation = CGPoint(x: appService.threadNavigationLocationX, y: appService.threadNavigationLocationY)
+        }
+        
+        if self.postId > 0 || self.replyCount >= self.loadingLimit {
+            // Let the view load so we don't get stuck on the list screen
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(1)) {
+                getData()
+            }
+        } else {
+            // Load immediately
+            getData()
+        }
+    }
+    
+    // Refresh thread after posting
+    private func refreshThreadAfterPosting(_ value: Bool) {
+        if value && chatService.didSubmitPost && chatService.activeThreadId == self.threadId {
+            chatService.didGetThreadStart = false
+            self.selectedPost = 0
+            self.isGettingThread = true
+        }
+    }
+    
+    // When done refreshing (after posting or pull to refresh)
+    private func finishedRefreshing(_ value: Bool) {
+        if value && chatService.activeThreadId == self.threadId && canRefresh {
+            self.canRefresh = false
+            chatService.didSubmitPost = false
+            chatService.didGetThreadStart = false
+            chatService.didGetThreadFinish = false
+            self.selectedPost = 0
+            getThreadData()
+            self.postList = [ChatPosts]()
+            self.postStrength = [Int: Double]()
+            getPostList(parentId: self.threadId)
+            self.isGettingThread = false
+            self.canRefresh = true
+        }
+    }
     
     var body: some View {
         VStack {
@@ -385,45 +457,17 @@ struct ThreadDetailView: View {
         
         // Update view contents on iPad when thread selected
         .onReceive(chatService.$activeThreadId) { _ in
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                chatService.scrollTargetThreadTop = ScrollToTopId
-                self.selectedPost = 0
-                getThreadData()
-                self.postList = [ChatPosts]()
-                self.postStrength = [Int: Double]()
-                getPostList(parentId: self.threadId)
-            }
+            updateThread()
         }
         
         // If refreshing thread after posting
         .onReceive(chatService.$didGetThreadStart) { value in
-            if value && chatService.didSubmitPost && chatService.activeThreadId == self.threadId {
-                chatService.didGetThreadStart = false
-                self.selectedPost = 0
-                self.isGettingThread = true
-                /*
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(15)) {
-                    chatService.didGetThreadFinish = true
-                }
-                */
-            }
+            refreshThreadAfterPosting(value)
         }
         
         // When done refreshing (after posting or pull to refresh)
         .onReceive(chatService.$didGetThreadFinish) { value in
-            if value && chatService.activeThreadId == self.threadId && canRefresh {
-                self.canRefresh = false
-                chatService.didSubmitPost = false
-                chatService.didGetThreadStart = false
-                chatService.didGetThreadFinish = false
-                self.selectedPost = 0
-                getThreadData()
-                self.postList = [ChatPosts]()
-                self.postStrength = [Int: Double]()
-                getPostList(parentId: self.threadId)
-                self.isGettingThread = false
-                self.canRefresh = true
-            }
+            finishedRefreshing(value)
         }
         
         // Disable while getting new data
@@ -431,35 +475,12 @@ struct ThreadDetailView: View {
         
         // Fetch data and settings on load
         .onAppear(perform: {
-            func getData() -> Void {
-                getUserData()
-                getThreadData()
-                if UIDevice.current.userInterfaceIdiom == .phone {
-                    getPostList(parentId: self.threadId)
-                }
-                self.threadNavigationLocation = CGPoint(x: appService.threadNavigationLocationX, y: appService.threadNavigationLocationY)
-            }
-            
-            if self.postId > 0 || self.replyCount >= self.loadingLimit {
-                // Let the view load so we don't get stuck on the list screen
-                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(1)) {
-                    getData()
-                }
-            } else {
-                // Load immediately
-                getData()
-            }
+            fetchDataAndSettings()
         })
         
         // Stop posting, refreshing or tagging
         .onDisappear {
-            self.postList = [ChatPosts]()
-            self.postStrength = [Int: Double]()
-            chatService.didSubmitPost = false
-            chatService.didGetThreadStart = false
-            chatService.didGetThreadFinish = false
-            self.isGettingThread = false
-            chatService.showingTagNotice = false
+            stopAllActions()
         }
         
         // Loading and Alerts
