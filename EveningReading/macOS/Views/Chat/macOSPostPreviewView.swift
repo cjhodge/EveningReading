@@ -9,6 +9,7 @@ import SwiftUI
 
 struct macOSPostPreviewView: View {
     @EnvironmentObject var appService: AppService
+    @EnvironmentObject var chatService: ChatService
     @Binding var postId: Int
     @Binding var postAuthor: String
     @Binding var replyLines: String?
@@ -18,7 +19,6 @@ struct macOSPostPreviewView: View {
     @Binding var postStrength: Double?
     @Binding var op: String
     @Binding var selectedPostDepth: Int
-    @Binding var postsToHighlight: [Int]
     
     var body: some View {
         // Reply lines for eaiser reading
@@ -32,7 +32,7 @@ struct macOSPostPreviewView: View {
                         .foregroundColor(Color("replyLines"))
                         .overlay(
                             Text(
-                                self.postsToHighlight.contains(postId) && selectedPostDepth - 1 == index && index > 0 ? String(character) : ""
+                                chatService.postsToHighlight.contains(postId) && selectedPostDepth - 1 == index && index > 0 ? String(character) : ""
                             )
                             .lineLimit(1)
                             .fixedSize()

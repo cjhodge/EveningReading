@@ -47,6 +47,7 @@ struct macOSThreadPreview: View {
         chatService.activeThreadId = self.threadId
         chatService.activeParentId = 0
         chatService.hideReplies = true
+        chatService.postsToHighlight.removeAll()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             chatService.hideReplies = false
         }

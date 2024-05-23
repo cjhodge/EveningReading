@@ -23,7 +23,6 @@ struct PostPreviewView: View {
     var postLols: [ChatLols]
     var op: String = ""
     @Binding var selectedPostDepth: Int
-    @Binding var postsToHighlight: [Int]
 
     var body: some View {
         HStack {
@@ -37,7 +36,7 @@ struct PostPreviewView: View {
                         .foregroundColor(Color("replyLines"))
                         .overlay(
                             Text(
-                                self.postsToHighlight.contains(postId) && selectedPostDepth - 1 == index && index > 0 ? String(character) : ""
+                                chatService.postsToHighlight.contains(postId) && selectedPostDepth - 1 == index && index > 0 ? String(character) : ""
                             )
                                 .lineLimit(1)
                                 .fixedSize()

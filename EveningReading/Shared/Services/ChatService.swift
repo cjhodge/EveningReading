@@ -24,6 +24,8 @@ class ChatService: ObservableObject {
     @Published var activePostDepth: Int = 0
     @Published var hideReplies = true
     
+    @Published var postsToHighlight = [Int]()
+    
     @Published var didSubmitPost = false
 
     @Published var didTagPost = false

@@ -34,7 +34,6 @@ struct ThreadDetailView: View {
     @State private var postList = [ChatPosts]()
     @State private var postStrength = [Int: Double]()
     @State private var replyLines = [Int: String]()
-    @State private var postsToHighlight = [Int]()
     
     @State private var selectedPost = 0
     @State private var selectedPostRichText = [RichTextBlock]()
@@ -203,7 +202,7 @@ struct ThreadDetailView: View {
         chatService.activePostId = postList[postIndex].id
         chatService.activeParentId = postList[postIndex].parentId
         
-        self.postsToHighlight.removeAll()
+        chatService.postsToHighlight.removeAll()
         
         if postList[postIndex].parentId == threadId {
             return
@@ -212,7 +211,7 @@ struct ThreadDetailView: View {
         self.selectedPostDepth = self.replyLines[postList[postIndex].id]?.count ?? 999
         
         for siblingPost in self.postList.filter({ $0.parentId == chatService.activeParentId }) {
-            self.postsToHighlight.append(siblingPost.id)
+            chatService.postsToHighlight.append(siblingPost.id)
             getChildren(parentId: siblingPost.id)
         }
     }
@@ -221,7 +220,7 @@ struct ThreadDetailView: View {
     private func getChildren(parentId: Int) {
         let children = self.postList.filter({ $0.parentId == parentId })
         for child in children {
-            self.postsToHighlight.append(child.id)
+            chatService.postsToHighlight.append(child.id)
             getChildren(parentId: child.id)
         }
     }
@@ -393,7 +392,7 @@ struct ThreadDetailView: View {
                                     
                                     // Reply preview
                                     if self.selectedPost != post.id {
-                                        PostPreviewView(username: self.username, postId: post.id, parentId: post.parentId, postBody: post.body, replyLines: self.replyLines[post.id] == nil ? String(repeating: " ", count: 5) : self.replyLines[post.id]!, postCategory: post.category, postStrength: postStrength[post.id], postAuthor: post.author, postLols: post.lols, op: self.rootPostAuthor, selectedPostDepth: $selectedPostDepth, postsToHighlight: $postsToHighlight
+                                        PostPreviewView(username: self.username, postId: post.id, parentId: post.parentId, postBody: post.body, replyLines: self.replyLines[post.id] == nil ? String(repeating: " ", count: 5) : self.replyLines[post.id]!, postCategory: post.category, postStrength: postStrength[post.id], postAuthor: post.author, postLols: post.lols, op: self.rootPostAuthor, selectedPostDepth: $selectedPostDepth
                                         )
                                     }
                                     
@@ -414,10 +413,10 @@ struct ThreadDetailView: View {
                                     chatService.activeParentId = post.parentId
                                     
                                     self.selectedPostDepth = self.replyLines[post.id]?.count ?? 999
-                                    self.postsToHighlight.removeAll()
+                                    chatService.postsToHighlight.removeAll()
                                     
                                     for siblingPost in self.postList.filter({ $0.parentId == post.parentId }) {
-                                        self.postsToHighlight.append(siblingPost.id)
+                                        chatService.postsToHighlight.append(siblingPost.id)
                                         getChildren(parentId: siblingPost.id)
                                     }
                                     
