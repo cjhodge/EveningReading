@@ -71,7 +71,8 @@ struct macOSThreadView: View {
     private func setSelectedPost(_ postIndex: Int) {
         chatService.activeParentId = postList[postIndex].id
         selectedPost = postList[postIndex].id
-        chatService.scrollTargetChat = postList[postIndex].id
+        chatService.scrollTargetChat = postList[postIndex].id        
+        chatService.postsToHighlight.removeAll()
     }
     
     private func getChildren(parentId: Int) {

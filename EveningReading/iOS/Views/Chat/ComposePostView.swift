@@ -66,6 +66,7 @@ struct ComposePostView: View {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(8)) {
             chatService.getThread()
+            chatService.postsToHighlight.removeAll()
         }
     }
 

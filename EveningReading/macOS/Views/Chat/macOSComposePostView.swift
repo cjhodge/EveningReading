@@ -185,6 +185,7 @@ struct macOSComposePostView: View {
                                     }
                                     chatService.showingNewPostSheet = false
                                     chatService.showingNewPostSpinner = true
+                                    chatService.postsToHighlight.removeAll()
                                     postBody = ""
                                 }, secondaryButton: .cancel() {
                                     
