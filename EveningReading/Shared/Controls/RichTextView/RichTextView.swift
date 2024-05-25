@@ -39,6 +39,7 @@ struct TextAttributes: OptionSet, Hashable {
     static let sample = TextAttributes(rawValue: 1 << 13)
     static let quote = TextAttributes(rawValue: 1 << 14)
     static let code = TextAttributes(rawValue: 1 << 15)
+    static let underline = TextAttributes(rawValue: 1 << 16)
 }
 
 enum RichTextBlock: Hashable {
@@ -323,6 +324,9 @@ struct TextBlockView: View {
             if t.attributes.contains(.italic) {
                 inlineTextView = inlineTextView.italic()
             }
+            if t.attributes.contains(.underline) {
+                inlineTextView = inlineTextView.underline()
+            }
             if t.attributes.contains(.heading) {
                 inlineTextView = inlineTextView.font(.headline)
             }
@@ -482,6 +486,13 @@ class RichTextBuilder {
         var lineOfText = [InlineText]()
         for markup in resultsByType {
             
+            enum Suit: String {
+                case bold = "<b>"
+                case Hearts = "♥"
+                case Diamonds = "♦"
+                case Clubs = "♣"
+            }
+            
             // Open tags
             if markup.postMarkupType == ShackMarkupType.tag {
                 if markup.postMarkup == "<b>" {
@@ -499,6 +510,14 @@ class RichTextBuilder {
                 } else if markup.postMarkup == "</i>" {
                     if attr.contains(TextAttributes.italic) {
                         attr.remove(TextAttributes.italic)
+                    }
+                } else if markup.postMarkup == "<u>" {
+                    if !attr.contains(TextAttributes.underline) {
+                        attr.update(with: TextAttributes.underline)
+                    }
+                } else if markup.postMarkup == "</u>" {
+                    if attr.contains(TextAttributes.underline) {
+                        attr.remove(TextAttributes.underline)
                     }
                 } else if markup.postMarkup == #"<pre class="jt_code">"# {
                     if !attr.contains(TextAttributes.code) {
