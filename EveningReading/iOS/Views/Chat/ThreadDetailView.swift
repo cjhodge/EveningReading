@@ -291,6 +291,7 @@ struct ThreadDetailView: View {
             self.postList = [ChatPosts]()
             self.postStrength = [Int: Double]()
             getPostList(parentId: self.threadId)
+            chatService.postsToHighlight.removeAll()
             self.isGettingThread = false
             self.canRefresh = true
         }
