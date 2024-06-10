@@ -78,7 +78,7 @@ struct TagPostView: View {
     }
     
     // Make tag action sheet
-    private func getTacActionSheet() -> ActionSheet {
+    private func getTagActionSheet() -> ActionSheet {
         let buttons = PostTag.allCases.enumerated().map { i, option in
             Alert.Button.default(Text(option.rawValue), action: { self.tagPost(option.rawValue) } )
         }
@@ -88,6 +88,27 @@ struct TagPostView: View {
 
     var body: some View {
         VStack {
+            Menu {
+                ForEach(PostTag.allCases, id: \.rawValue) { tag in
+                    Button(action: { self.tagPost(tag.rawValue) }) {
+                        Label(tag.rawValue, systemImage: "tag")
+                        //Label(tag.rawValue, systemImage: "circle")
+                        //Label(tag.rawValue, systemImage: "checkmark.circle")
+                    }
+                }
+            }
+            label: {
+                ZStack {
+                    Image(systemName: "circle.fill")
+                        .font(.title)
+                        .foregroundColor(Color("ActionButton"))
+                        .shadow(color: Color("ActionButtonShadow"), radius: 4, x: 0, y: 0)
+                    Image(systemName: "tag")
+                        .imageScale(.medium)
+                        .foregroundColor(self.colorScheme == .dark ? Color(UIColor.white) : Color(UIColor.systemBlue))
+                }
+            }
+            /*
             Button(action: {
                 chatService.didTagPost = false
                 self.showingTagActionSheet = true
@@ -104,8 +125,9 @@ struct TagPostView: View {
             }
             .actionSheet(isPresented: self.$showingTagActionSheet)
             {
-                getTacActionSheet()
+                getTagActionSheet()
             }
+            */
         }
     }
 }
